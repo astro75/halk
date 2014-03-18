@@ -8,6 +8,7 @@ import hscript.Interp;
 class Live
 {
 	
+	var url = "http://localhost:222/script.hs";
 	var parser:Parser;
 	var interp:Interp;
 	var script:String;
@@ -15,7 +16,7 @@ class Live
 	
 	static public var instance(default, null):Live = new Live();
 	
-	static function callField(d:Dynamic, n:String, args:Array<Dynamic>) {
+	public static function callField(d:Dynamic, n:String, args:Array<Dynamic>) {
 		#if (flash) if (d == Std && n == "int") n = "_int"; #end
 		return Reflect.callMethod(d, Reflect.getProperty(d, n), args);
 	}
@@ -28,6 +29,7 @@ class Live
 	function new()
 	{
 		parser = new Parser();
+		if (parser.identChars.indexOf("`") == -1) parser.identChars += "`";
 		//parser.allowTypes = true;
 		parser.allowJSON = true;
 		interp = new Interp();
@@ -38,12 +40,30 @@ class Live
 		interp.variables.set("callMethod", Reflect.callMethod);
 		interp.variables.set("getProperty", Reflect.getProperty);
 		interp.variables.set("setProperty", setProperty);
+		interp.variables.set("this", null);
+		interp.variables.set("`c", Live.getClass);
 
 		#if sys delayed(load, 500); #else
 		load(); #end
 	}
 	
-	var url = "script.hs";
+	private static function getClass(n:String) 
+	{
+		var ref:Dynamic = null;
+		try {
+			ref = Type.resolveClass(n);
+		} catch (e:Dynamic) { }
+		
+		if (ref == null) {
+			try {
+				ref = Type.resolveEnum(n);
+			} catch (e:Dynamic) { }
+		}
+		
+		return ref;
+		
+	}
+	
 	
 	#if sys
 	function delayed(f:Dynamic, time) {
@@ -57,7 +77,7 @@ class Live
 
 	function load()
 	{
-		#if sys
+		#if (sys && false)
 		var data = sys.io.File.getContent(url);
 		parse(data);
 		delayed(load, 500);
@@ -102,14 +122,21 @@ class Live
 				var i = 0;
 				while (i < types.length) {
 					var n = types[i++];
-					var ref = null;
+					trace(n);
+					var ref:Dynamic = null;
 					try {
 						ref = Type.resolveClass(n);
 					} catch (e:Dynamic) { }
 					
 					if (ref == null) {
-						ok = false;
+						//ok = false;
 						trace("can't find type in app: '" + n + "'");
+						try {
+							ref = Type.resolveEnum(n);
+						} catch (e:Dynamic) { }
+					}
+					
+					if (ref == null) {
 					}
 					else {
 						var arr = n.split(".");
@@ -124,10 +151,13 @@ class Live
 								interp.variables.set(root, res = { } );
 							}
 							for (s in arr) {
-								if (Reflect.hasField(res, s))
+								if (Reflect.hasField(res, s)) {
 									res = Reflect.field(res, s);
-								else 
-									Reflect.setField(res, s, res = { } );
+								} else {
+									var child = { };
+									Reflect.setField(res, s, child );
+									res = child;
+								}
 							}
 							Reflect.setField(res, last, ref);
 						}
@@ -152,18 +182,39 @@ class Live
 	public function removeListener(f:Dynamic) {
 		listeners.remove(f);
 	}
-
-	public function call(instance:Dynamic, method:String, args:Array<Dynamic>)
+	
+	public function getField(method)
 	{
-		if (Reflect.field(methods, method) == null) return;
-		
+		return Reflect.field(methods, method);
+	}
+	
+	public function callVoid(instance:Dynamic, method:String, args:Array<Dynamic>):Void
+	{		
+		var prev = interp.variables.get("this");
 		interp.variables.set("this", instance);
 		#if !debug try { #end
-			Reflect.callMethod(instance, Reflect.field(methods, method), args);
+			 Reflect.callMethod(instance, getField(method), args);
 		#if !debug } catch (e:Dynamic) {
 			trace("hscript: execute error");
 			trace(e);
 		}
 		#end
+		interp.variables.set("this", prev);
+	}
+
+	public function call(instance:Dynamic, method:String, args:Array<Dynamic>):Dynamic
+	{
+		var prev = interp.variables.get("this");
+		interp.variables.set("this", instance);
+		var ret:Dynamic = null;
+		#if !debug try { #end
+			ret = Reflect.callMethod(instance, getField(method), args);
+		#if !debug } catch (e:Dynamic) {
+			trace("hscript: execute error");
+			trace(e);
+		}
+		#end
+		interp.variables.set("this", prev);
+		return ret;
 	}
 }
