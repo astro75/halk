@@ -40,6 +40,7 @@ class Main extends Sprite implements ILive {
 		circle.graphics.beginFill (Std.int (Math.random() * 0xffffff), 1);
 		circle.graphics.drawCircle (0, 0, size);
 		circle.alpha = 0.2 + Math.random () * 0.6;
+		trace(Std.parseInt("5") + 5);
 	}
 	
 	

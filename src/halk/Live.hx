@@ -35,7 +35,7 @@ class Live
 		if (parser.identChars.indexOf("`") == -1) parser.identChars += "`";
 		//parser.allowTypes = true;
 		parser.allowJSON = true;
-		interp = new Interp();
+		interp = new HalkInterp();
 		methods = { };
 		listeners = [];
 

@@ -28,7 +28,7 @@ class Ball extends Sprite implements ILive {
 		addEventListener(MouseEvent.CLICK, onClick);
 	}
 	
-	@live function draw() {
+	function draw() {
 		var gfx = graphics;
 		gfx.clear();
 		gfx.lineStyle(5, 0xFFFFFF * Math.random());
@@ -52,7 +52,7 @@ class Ball extends Sprite implements ILive {
 	public var vx:Float = 0;
 	public var vy:Float = 0;
 	
-	@live public function update() {
+	public function update() {
 		x += vx;
 		y -= vy;
 		if (x < 0 || x > stage.stageWidth) {
