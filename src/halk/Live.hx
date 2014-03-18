@@ -8,7 +8,8 @@ import hscript.Interp;
 class Live
 {
 	
-	var url = "http://localhost:222/script.hs";
+	var url:String;
+	var path:String;
 	var parser:Parser;
 	var interp:Interp;
 	var script:String;
@@ -28,6 +29,8 @@ class Live
 	
 	function new()
 	{
+		url = Settings.getUrl() + "index.hs";
+		path = Settings.getOutPath() + "index.hs";
 		parser = new Parser();
 		if (parser.identChars.indexOf("`") == -1) parser.identChars += "`";
 		//parser.allowTypes = true;
@@ -77,8 +80,8 @@ class Live
 
 	function load()
 	{
-		#if (sys && false)
-		var data = sys.io.File.getContent(url);
+		#if (sys)
+		var data = sys.io.File.getContent(path);
 		parse(data);
 		delayed(load, 500);
 		#else

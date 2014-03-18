@@ -59,21 +59,6 @@ class Macro
 	static var inited:Null<Bool> = null;
 	static var firstBuild = true;
 
-	// the same path for Live and here, so i don't need to think where to place it
-	// TODO: nme, mac need test
-	static function getOutPath() {
-		return "C:/projektai/GenerateTest/script.hs";
-		
-		var path = FileSystem.fullPath(Compiler.getOutput());
-		var p = new Path(path);
-		if (!FileSystem.isDirectory(p.dir)) p = new Path(p.dir);
-
-		var t = new Path(p.dir);
-		if (t.file == "obj") p = new Path(t.dir + "/bin/t");
-		
-		return p.dir + "/script.hs";
-	}
-
 	// classes descriptions cache. Improves describeType speed
 	static var descCache:Map<String, TypeDesc> = new Map();
 
@@ -211,13 +196,11 @@ class Macro
 			script += ",\n___types___:[\"" + [for (n in varTypes.keys()) n].join("\", \"") + "\"]";
 		script += "\n}";
 
-		File.saveContent(getOutPath(), script);
+		File.saveContent(Settings.getOutPath() + "index.hs", script);
 		
 		//trace("halk: Scripts generated");
 		
-		#if halk_stop
-		throw "halk: Script file created";
-		#end
+		Settings.afterHalkGenerate();
 	}
 	
 	static private function fullTypePath(pack, name) {
@@ -273,14 +256,14 @@ class Macro
 		return (type.module.length > 0 ? type.module + "." : "") + type.name;
 	}
 	
-	// remove previous url and create new one with our path.
+	/*// remove previous url and create new one with our path.
 	public static function buildLive() {
 		var res = Context.getBuildFields();
 		for (f in res) if (f.name == "url") { res.remove(f); break; }
 
 		res.push( { kind:FVar(null, macro $v{getOutPath()}), name:"url", pos:Context.currentPos() }  );
 		return res;
-	}
+	}*/
 
 	public static function build()
 	{
@@ -540,19 +523,21 @@ class Macro
 
 				case ECast(e, t):
 					if (t == null)
-						expr.map(processExpr);
+						e.map(processExpr);
 					else
 					switch (t) {
-						case TPath(t):
-							var tn = (t.pack.length > 0 ? t.pack.join(".") + "." : "") + t.name;
+						case TPath(t2):
+							/*var tn = (t.pack.length > 0 ? t.pack.join(".") + "." : "") + t.name
+							+ (t.sub == null ? "" : "."+t.sub);
 							var type = Context.getType(tn);
-							registerMacroType(type, expr.pos);
+							//registerMacroType(type, expr.pos);
 
-							tn = type.toString();
-							e = processExpr(e);
-							var msg = "can't cast '" + e.toString() + "' to '" + tn + "'";
-							registerType("Std", []);
-							macro if (Std.is($e, $i { tn } )) $e; else throw $v { msg };
+							tn = type.toString();*/
+							//e = processExpr(e);
+							//var msg = "can't cast '" + e.toString() + "' to '" + tn + "'";
+							//registerType("Std", []);
+							//macro if (Std.is($e, $t )) $e; else throw $v { msg };
+							e.map(processExpr);
 
 						case _:
 							expr;

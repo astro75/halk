@@ -22,16 +22,16 @@ class NekoTest implements ILive
 	public static function main() {
 		
 		Thread.create(sub);
-		while (true) {}
-			//Sys.sleep(0.1);
+		while (true)
+			Sys.sleep(0.01);
 	}
 	
 	static function test(a:Float) {}
 	
 	@liveUpdate function live():Void {
 		trace("");
-		//trace(Sys.getCwd());
-		//trace(FileSystem.fullPath("."));
+		trace(Sys.getCwd());
+		trace(FileSystem.fullPath("."));
 		for (f in FileSystem.readDirectory("../src/halk")) 
 			trace(f);
 	}
