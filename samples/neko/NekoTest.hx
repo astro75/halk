@@ -30,8 +30,8 @@ class NekoTest implements ILive
 	
 	@liveUpdate function live():Void {
 		trace("");
-		trace(Sys.getCwd());
-		trace(FileSystem.fullPath("."));
+		//trace(Sys.getCwd());
+		//trace(FileSystem.fullPath("."));
 		for (f in FileSystem.readDirectory("../src/halk")) 
 			trace(f);
 	}

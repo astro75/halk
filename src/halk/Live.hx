@@ -4,7 +4,6 @@ import haxe.Timer;
 import hscript.Parser;
 import hscript.Interp;
 
-//@:build(halk.Macro.buildLive()) 
 class Live
 {
 	
@@ -17,16 +16,6 @@ class Live
 	
 	static public var instance(default, null):Live = new Live();
 	
-	public static function callField(d:Dynamic, n:String, args:Array<Dynamic>) {
-		#if (flash) if (d == Std && n == "int") n = "_int"; #end
-		return Reflect.callMethod(d, Reflect.getProperty(d, n), args);
-	}
-	
-	static function setProperty(d:Dynamic, n:String, v:Dynamic) {
-		Reflect.setProperty(d, n, v);
-		return v;
-	}
-	
 	function new()
 	{
 		url = Settings.getUrl() + "index.hs";
@@ -38,11 +27,7 @@ class Live
 		interp = new HalkInterp();
 		methods = { };
 		listeners = [];
-
-		interp.variables.set("callField", Live.callField);
-		interp.variables.set("callMethod", Reflect.callMethod);
-		interp.variables.set("getProperty", Reflect.getProperty);
-		interp.variables.set("setProperty", setProperty);
+		
 		interp.variables.set("this", null);
 		interp.variables.set("`c", Live.getClass);
 
@@ -118,60 +103,8 @@ class Live
 		}#end
 		
 		if (nmethods != null) {
-			var types:Array<String> = Reflect.field(nmethods, "___types___");
-			//trace(types);
-			var ok = true;
-			if (types != null) {
-				var i = 0;
-				while (i < types.length) {
-					var n = types[i++];
-					trace(n);
-					var ref:Dynamic = null;
-					try {
-						ref = Type.resolveClass(n);
-					} catch (e:Dynamic) { }
-					
-					if (ref == null) {
-						//ok = false;
-						trace("can't find type in app: '" + n + "'");
-						try {
-							ref = Type.resolveEnum(n);
-						} catch (e:Dynamic) { }
-					}
-					
-					if (ref == null) {
-					}
-					else {
-						var arr = n.split(".");
-						if (arr.length == 1) interp.variables.set(n, ref);
-						else {
-							var res:Dynamic;
-							var root = arr.shift();
-							var last = arr.pop();
-							if (interp.variables.exists(root)) {
-								res = interp.variables.get(root);
-							} else {
-								interp.variables.set(root, res = { } );
-							}
-							for (s in arr) {
-								if (Reflect.hasField(res, s)) {
-									res = Reflect.field(res, s);
-								} else {
-									var child = { };
-									Reflect.setField(res, s, child );
-									res = child;
-								}
-							}
-							Reflect.setField(res, last, ref);
-						}
-					}
-				}
-			}
-			
-			if (ok) {
-				methods = nmethods;
-				for (l in listeners) l();
-			}
+			methods = nmethods;
+			for (l in listeners) l();
 		}
 	}
 	
