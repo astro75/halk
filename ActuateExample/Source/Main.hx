@@ -1,6 +1,7 @@
 package;
 
 
+import flash.display.DisplayObject;
 import flash.display.Sprite;
 import flash.events.Event;
 import halk.ILive;
@@ -9,7 +10,6 @@ import motion.easing.Quad;
 
 
 class Main extends Sprite implements ILive {
-	
 	
 	public function new () {
 		
@@ -40,7 +40,6 @@ class Main extends Sprite implements ILive {
 		circle.graphics.beginFill (Std.int (Math.random() * 0xffffff), 1);
 		circle.graphics.drawCircle (0, 0, size);
 		circle.alpha = 0.2 + Math.random () * 0.6;
-		trace(Std.parseInt("5") + 5);
 	}
 	
 	
@@ -53,6 +52,12 @@ class Main extends Sprite implements ILive {
 			
 		}
 		
+	}
+	
+	override public function addChildAt(child:DisplayObject, index:Int):DisplayObject 
+	{
+		trace(index);
+		return super.addChildAt(child, index);
 	}
 	
 	

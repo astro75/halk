@@ -188,6 +188,7 @@ class Macro
 			});
 		}
 		var fields = Context.getBuildFields();
+		var newFields = new Array<Field>();
 		
 		if (fields.length == 0) return fields;
 
@@ -242,7 +243,7 @@ class Macro
 								};
 							//m = { expr:EMeta({pos:m.pos, params:[], name:"noLive"}, m), pos:m.pos };
 							inside.unshift(m);
-							f.expr = macro $b { inside };
+							//f.expr = macro $b { inside };
 						} else {
 							var m = macro { 
 								if (halk.Live.instance.getField($v { name } ) != null) 
@@ -250,23 +251,36 @@ class Macro
 							};
 							//m = { expr:EMeta({pos:m.pos, params:[], name:"noLive"}, m), pos:m.pos };
 							inside.unshift(m);
-							f.expr = macro $b { inside };
+							//f.expr = macro $b { inside };
 							}
 						//f.expr = macro live.Live.instance.call(this, $v { name }, $v { args } );
-
+						
+						if (field.meta.exists(function(m) return m.name == "liveUpdate")) {
+							if (isStatic) Context.error("liveUpdate on static metods is not supported", field.pos);
+							if (f.args.length > 0) Context.error("liveUpdate method doesn't support arguments", field.pos);
+							liveListeners.push(field.name);
+						}
+						
+						if (field.access.has(AOverride)) {
+							trace("asd");
+							trace(field);
+							// sreate method for super.fun() calls
+							var params = [ for (a in f.args) { expr:EConst(CIdent(a.name)), pos:f.expr.pos } ];
+							var name = field.name;
+							var m = macro super.$name($a { params } );
+							if (!isVoid) m = macro return $m;
+							newFields.push( { name:"`s`" + field.name, access:[APublic], pos:f.expr.pos,
+								kind:FFun( { args:f.args, ret:f.ret, expr:m, params:f.params } )
+							});
+						}
+						
 					case _:
 						Context.error("only methods can be live", field.pos);
 				}
 			}
-
-			if (field.meta.exists(function(m) return m.name == "liveUpdate")) {
-				switch (field.kind) {
-					case FFun(f):
-						if (f.args.length > 0) Context.error("liveUpdate method doesn't support arguments", field.pos);
-						liveListeners.push(field.name);
-					case _: Context.error("only methods can be liveUpdate", field.pos);
-				}
-			}
+			
+			
+			
 		}
 		if (res.length > 0) methods.set(tn, res);
 
@@ -300,7 +314,7 @@ class Macro
 			}
 		}
 
-		return fields;
+		return fields.concat(newFields);
 	}
 	
 	static private function hasReturn(expr:Expr):Bool
@@ -412,7 +426,7 @@ class Macro
 						{expr:EVars([vars[0]]), pos:expr.pos };
 					else expr;
 
-				case ECall( { expr:EConst(CIdent(name)) }, params):
+				case ECall( e = { expr:EConst(CIdent(name)) }, params):
 
 					if (name == "$type") processExpr(params[0]);
 					else {
@@ -422,6 +436,14 @@ class Macro
 				case ECall( { expr:EField(e, field) }, params):
 
 					params = params.map(processExpr);
+					
+					
+					switch(e.expr) {
+						case EConst(CIdent("super")):
+							var name = "`s`" + field;
+							return macro this.$name($a{params});
+						case _:
+					}
 
 					var t = null;
 					try {
