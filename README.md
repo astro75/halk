@@ -38,3 +38,4 @@ Now you can edit your code and compile it to create new script file. That script
 - changing function parameters (inline functions work fine)
 - @liveUpdate on static methods
 - live constructor
+- different target platforms running at the same time
