@@ -19,7 +19,6 @@ class Live
 	function new()
 	{
 		url = Settings.getUrl() + "index.hs";
-		path = Settings.getOutPath() + "index.hs";
 		parser = new Parser();
 		if (parser.identChars.indexOf("`") == -1) parser.identChars += "`";
 		//parser.allowTypes = true;
@@ -31,7 +30,7 @@ class Live
 		interp.variables.set("this", null);
 		interp.variables.set("`c", Live.getClass);
 
-		#if sys delayed(load, 500); #else
+		#if sys delayed(load, Settings.checkInterval); #else
 		load(); #end
 	}
 	
@@ -66,20 +65,20 @@ class Live
 	function load()
 	{
 		#if (sys)
-		var data = sys.io.File.getContent(path);
+		var data = sys.io.File.getContent(url);
 		parse(data);
-		delayed(load, 500);
+		delayed(load, Settings.checkInterval);
 		#else
 		
 		var http = new haxe.Http(url + "?r="+ (Timer.stamp() * 10e6));
 		http.onData = function(data) {
 			parse(http.responseData);
-			haxe.Timer.delay(load, 500);
+			haxe.Timer.delay(load, Settings.checkInterval);
 		}
 		http.onError = function(data) {
 			trace('can\'t load "$url" file');
 			//parse(http.responseData);
-			haxe.Timer.delay(load, 500);
+			haxe.Timer.delay(load, Settings.checkInterval);
 		}
 		http.request();
 		
@@ -89,6 +88,9 @@ class Live
 	function parse(data:String)
 	{
 		if (data == script) return;
+		
+		trace("Halk: new script file loaded");
+		
 		script = data;
 		// trace("parse: " + data);
 		

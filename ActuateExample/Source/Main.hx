@@ -11,6 +11,8 @@ import motion.easing.Quad;
 
 class Main extends Sprite implements ILive {
 	
+	private var counter:Int = 0;
+	
 	public function new () {
 		
 		super ();
@@ -56,7 +58,7 @@ class Main extends Sprite implements ILive {
 	
 	override public function addChildAt(child:DisplayObject, index:Int):DisplayObject 
 	{
-		trace(index);
+		trace(counter++);
 		return super.addChildAt(child, index);
 	}
 	

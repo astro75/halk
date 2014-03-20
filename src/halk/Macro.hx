@@ -98,7 +98,7 @@ class Macro
 				
 				if (expr1 == null) continue;
 				
-				trace(expr1.toString());
+				//trace(expr1.toString());
 				
 				switch (expr1.expr) {
 					case EFunction(_, f):
@@ -262,8 +262,7 @@ class Macro
 						}
 						
 						if (field.access.has(AOverride)) {
-							trace("asd");
-							trace(field);
+							//trace(field);
 							// sreate method for super.fun() calls
 							var params = [ for (a in f.args) { expr:EConst(CIdent(a.name)), pos:f.expr.pos } ];
 							var name = field.name;
@@ -275,7 +274,6 @@ class Macro
 						}
 						
 					case _:
-						Context.error("only methods can be live", field.pos);
 				}
 			}
 			
